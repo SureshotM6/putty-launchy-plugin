@@ -3,14 +3,20 @@
 
 #include "stdafx.h"
 #include "LaunchyPlugin.h"
+#include "PluginOptionsForm.h"
 #include "PuTTY.h"
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <iterator>
 #include <sstream>
+#include <vcclr.h>
 
-static void unmungestr(const wstring &in_s, wstring &out_s)
+using namespace System::Windows::Forms;
+
+wstring PathToPutty;
+
+void unmungestr(const wstring &in_s, wstring &out_s)
 {
 	wstring::const_iterator in;
 
@@ -35,7 +41,7 @@ static void unmungestr(const wstring &in_s, wstring &out_s)
 	}
 }
 
-static void EscapeQuotes(const wstring &in_s, wstring &out_s)
+void EscapeQuotes(const wstring &in_s, wstring &out_s)
 {
 	wstring::const_iterator in;
 
@@ -165,8 +171,9 @@ SearchResult* PluginFileOptions (const TCHAR* FullPath, int NumStrings, const TC
 
 
 void PluginDoAction (int NumStrings, const TCHAR* Strings, const TCHAR* FinalString, const TCHAR* FullPath) {
-	wstring cmd = L"putty";
-	wstring params, profile, safe_profile;
+	wstring cmd, params, profile, safe_profile;
+
+	cmd = PathToPutty.empty() ? L"putty" : PathToPutty;
 
 	if (NumStrings >= 2) {
 		//try to remove header if person hit tab too many times
@@ -215,18 +222,26 @@ void PluginClose() {
 }
 
 void PluginInitialize() {
-	return;
+	PathToPutty = RetrieveString(L"PUTTY_PLUGIN_PATH_TO_PUTTY");
 }
 
 void PluginSaveOptions() {
-	return;
+	StoreString(L"PUTTY_PLUGIN_PATH_TO_PUTTY", PathToPutty);
 }
 
+//yucky interop between clr and native code here
 void PluginCallOptionsDlg(HWND parent) {
-	return;
+	String^ tempString = gcnew String(PathToPutty.c_str());
+
+	PuTTY::PluginOptionsForm^ options = gcnew PuTTY::PluginOptionsForm(tempString);
+
+	if (::DialogResult::OK == options->ShowDialog()) {
+		pin_ptr<const wchar_t> ptr = PtrToStringChars(options->PathToPutty());
+		PathToPutty = ptr;
+	}
 }
 
 bool PluginHasOptionsDlg() {
-	return false;
+	return true;
 }
 
