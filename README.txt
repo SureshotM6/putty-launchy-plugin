@@ -8,10 +8,6 @@ Copy PuTTY.dll to your Launchy Plugins folder (most likely 'C:\Program
 Files\Launchy\Plugins') and restart Launchy. If PuTTY.exe is not in your PATH,
 go to the options dialog and set the path to PuTTY there.
 
-You may also need to install the Microsoft Visual C++ 2005 SP1 Redistributable
-Package, if you do not already have it installed:
-http://www.microsoft.com/downloads/details.aspx?displaylang=en&FamilyID=200b2fd9-ae1a-4a14-984d-389c36f85647
-
 
 USAGE
 To begin completion, type "ssh" or "putty" followed by tab or space. The plugin
@@ -21,6 +17,10 @@ permutation of "home," "linux," and "ssh."
 
 
 CHANGELOG
+v1.2:
+    Removed dependency on VC++ Runtime and .NET CLR
+    Unsupported plugin for x64 systems
+
 v1.1:
     Added options dialog to set PATH to PuTTY.
     Added icon.

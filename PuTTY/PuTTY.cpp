@@ -2,18 +2,17 @@
 //
 
 #include "stdafx.h"
-#include "LaunchyPlugin.h"
-#include "PluginOptionsForm.h"
 #include "PuTTY.h"
+#include "LaunchyPlugin.h"
+#include "OptionsDlg.h"
+#include "resource.h"
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <iterator>
 #include <sstream>
-#include <vcclr.h>
 
-using namespace System::Windows::Forms;
-
+HINSTANCE hInstance;
 wstring PathToPutty;
 
 void unmungestr(const wstring &in_s, wstring &out_s)
@@ -67,6 +66,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                        LPVOID lpReserved
 					 )
 {
+	hInstance = hModule;
     return TRUE;
 }
 
@@ -229,16 +229,8 @@ void PluginSaveOptions() {
 	StoreString(L"PUTTY_PLUGIN_PATH_TO_PUTTY", PathToPutty);
 }
 
-//yucky interop between clr and native code here
 void PluginCallOptionsDlg(HWND parent) {
-	String^ tempString = gcnew String(PathToPutty.c_str());
-
-	PuTTY::PluginOptionsForm^ options = gcnew PuTTY::PluginOptionsForm(tempString);
-
-	if (::DialogResult::OK == options->ShowDialog()) {
-		pin_ptr<const wchar_t> ptr = PtrToStringChars(options->PathToPutty());
-		PathToPutty = ptr;
-	}
+	DialogBox(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), parent, OptionsDlgProc);
 }
 
 bool PluginHasOptionsDlg() {
