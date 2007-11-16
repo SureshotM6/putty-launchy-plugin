@@ -57,6 +57,38 @@ void EscapeQuotes(const wstring &in_s, wstring &out_s)
 	}
 }
 
+void lc(wstring &in) {
+	transform(in.begin(), in.end(), in.begin(), tolower);
+}
+
+void lc(const wstring &in, wstring &out) {
+	back_insert_iterator<wstring> output(out);
+	out.clear();
+	transform(in.begin(), in.end(), output, tolower);
+}
+
+vector<wstring> GenerateSessionNames()
+{
+	vector<wstring> sessions;
+	HKEY key;
+	int i;
+	wchar_t keyname[255];
+	wstring keyname_unmunged;
+
+	if (RegOpenKey(HKEY_CURRENT_USER, PUTTY_SESSION_REG_POS, &key) == ERROR_SUCCESS) {
+		for (i=0; RegEnumKey(key, i, keyname, sizeof(keyname)) == ERROR_SUCCESS; ++i) {
+			//remove %xx's
+			unmungestr(wstring(keyname), keyname_unmunged);
+
+			sessions.push_back(keyname_unmunged);
+		}
+
+		RegCloseKey(key);
+	}
+
+	return sessions;
+}
+
 #ifdef _MANAGED
 #pragma managed(push, off)
 #endif
@@ -98,8 +130,6 @@ TCHAR* PluginGetRegexs(int* iNumResults)
 	vect.push_back(L"^[sS][sS][hH] .*");
 	*iNumResults = (int) vect.size();
 	return StringVectorToTCHAR(vect);
-	//*iNumResults = 0;
-	//return NULL;
 }
 
 bool FoundAllKeywords(const wstring &haystack, const wstring &keywords) {
@@ -118,13 +148,10 @@ bool FoundAllKeywords(const wstring &haystack, const wstring &keywords) {
 SearchResult* PluginUpdateSearch (int NumStrings, const TCHAR* Strings, const TCHAR* FinalString, int* NumResults)
 {
 	vector<SearchResult> results;
-	HKEY key;
-	int i;
-	wchar_t keyname[255];
-	wstring keyname_unmunged;
-	wstring keyname_lower;
+	vector<wstring> sessions;
+	vector<wstring>::const_iterator session;
+	wstring session_lc;
 	wstring searchString = FinalString;
-	back_insert_iterator<wstring> keyname_lower_output(keyname_lower);
 
 	if (NumStrings == 0) {
 		//we are in a regex
@@ -138,25 +165,19 @@ SearchResult* PluginUpdateSearch (int NumStrings, const TCHAR* Strings, const TC
 		return NULL;
 	}
 
-	transform(searchString.begin(), searchString.end(), searchString.begin(), tolower);
+	lc(searchString);
 
 	//add sessions here
-	if (RegOpenKey(HKEY_CURRENT_USER, PUTTY_SESSION_REG_POS, &key) == ERROR_SUCCESS) {
-		for (i=0; RegEnumKey(key, i, keyname, sizeof(keyname)) == ERROR_SUCCESS; ++i) {
-			//remove %xx's
-			unmungestr(wstring(keyname), keyname_unmunged);
+	sessions = GenerateSessionNames();
 
-			//make the keyname lowercase for searching
-			keyname_lower.clear();
-			transform(keyname_unmunged.begin(), keyname_unmunged.end(), keyname_lower_output, tolower);
+	for (session = sessions.begin(); session != sessions.end(); ++session) {
+		//make the keyname lowercase for searching
+		lc(*session, session_lc);
 
-			//only add if the search string is found
-			if (FoundAllKeywords(keyname_lower, searchString)) {
-				results.push_back(makeResult(keyname_unmunged, L"", PLUGIN_NAME L" " + keyname_unmunged, NULL));
-			}
+		//only add if the search string is found
+		if (FoundAllKeywords(session_lc, searchString)) {
+			results.push_back(makeResult(*session, L"", PLUGIN_NAME L" " + *session, NULL));
 		}
-
-		RegCloseKey(key);
 	}
 
 	*NumResults = (int) results.size();
@@ -172,6 +193,7 @@ SearchResult* PluginFileOptions (const TCHAR* FullPath, int NumStrings, const TC
 
 void PluginDoAction (int NumStrings, const TCHAR* Strings, const TCHAR* FinalString, const TCHAR* FullPath) {
 	wstring cmd, params, profile, safe_profile;
+	vector<wstring> sessions;
 
 	cmd = PathToPutty.empty() ? L"putty" : PathToPutty;
 
@@ -180,13 +202,36 @@ void PluginDoAction (int NumStrings, const TCHAR* Strings, const TCHAR* FinalStr
 		vector<wstring> stringVec = TCHARListToVector(NumStrings, Strings);
 
 		profile = stringVec[1];
-	}else{
+	}else
+	if (wcslen(FullPath) != 0) {
+		//we matched a profile
 		profile = FullPath;
+	}else
+	if (NumStrings == 0) {
+		//we are in a regex
+		profile = FinalString;
+		wstring::size_type start;
+		start = profile.find_first_of(L" ");
+		if (wstring::npos != start) {
+			profile = profile.substr(start);
+		}else{
+			profile = L"";
+		}
+	}else{
+		//we are in normal tab completion with no matches
+		profile = FinalString;
 	}
 
-	EscapeQuotes(profile, safe_profile);
+	sessions = GenerateSessionNames();
 
-	params = L"-load \"" + profile + L"\"";
+	if (find(sessions.begin(), sessions.end(), profile) != sessions.end()) {
+		EscapeQuotes(profile, safe_profile);
+
+		params = L"-load \"" + safe_profile + L"\"";
+	}else{
+		//not a profile, so try to load as a hostname
+		params = profile;
+	}
 
 	SHELLEXECUTEINFO ShExecInfo;
 	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
