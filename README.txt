@@ -17,6 +17,10 @@ permutation of "home," "linux," and "ssh."
 
 
 CHANGELOG
+v1.3
+    Parameters not matching a session name will now be treated as a host name
+    Session names containing quote marks now work
+
 v1.2:
     Removed dependency on VC++ Runtime and .NET CLR
     Unsupported plugin for x64 systems
