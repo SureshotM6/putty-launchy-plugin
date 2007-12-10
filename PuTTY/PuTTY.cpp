@@ -176,7 +176,7 @@ SearchResult* PluginUpdateSearch (int NumStrings, const TCHAR* Strings, const TC
 
 		//only add if the search string is found
 		if (FoundAllKeywords(session_lc, searchString)) {
-			results.push_back(makeResult(*session, PLUGIN_NAME L": " + *session, PLUGIN_NAME L" " + *session, NULL));
+			results.push_back(makeResult(*session, *session, PLUGIN_NAME L" " + *session, NULL));
 		}
 	}
 
