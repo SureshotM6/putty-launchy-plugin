@@ -3,23 +3,26 @@ The latest version of this software can always be found at:
 http://putty-launchy-plugin.googlecode.com/
 
 
-INSTALLATION
-Copy PuTTY.dll to your Launchy Plugins folder (most likely 'C:\Program
-Files\Launchy\Plugins') and restart Launchy. If PuTTY.exe is not in your PATH,
-go to the options dialog and set the path to PuTTY there.
-
-
 USAGE
-To begin completion, type "ssh" or "putty" followed by tab or space. The plugin
-will list all of your PuTTY sessions and search for them by keyword (not by
-straight text). Therefore the session "home linux ssh" can be found by any
-permutation of "home," "linux," and "ssh."
+Version 2.0 of PuTTY Plugin for Launchy will work only with v2.0 (and higher) of 
+Launchy.
+
+If PuTTY.exe is not in your system PATH, you will need to set the path to PuTTY 
+in the options dialog.  To access the options, right click on the Launchy window 
+and click "Options".  Next go to the "Plugins" tab and select "PuTTY".  You can 
+customize and enable/disable many features of this plugin here.
+
+To begin completion, type "ssh" or "putty" followed by tab or space. The plugin 
+will list all of your PuTTY sessions.  After you select a session in Launchy, it 
+will be launched in PuTTY.
 
 
 CHANGELOG
 v2.0
     Now supports Launchy v2.0 (complete rewrite)
     Added configurable options for just about everything
+    Trigger words can be changed (defaults to "ssh" and "putty")
+    Sessions can be added directly to index, with no trigger word required
 
 v1.3
     Parameters not matching a session name will now be treated as a host name

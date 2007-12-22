@@ -35,6 +35,10 @@ FunctionEnd
 
 ; Pages
 
+PageEx license
+  LicenseText "README"
+  LicenseData README.txt
+PageExEnd
 Page directory WaitForLaunchy
 ;Page directory
 Page instfiles
