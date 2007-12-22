@@ -1,85 +1,81 @@
-#include "stdafx.h"
+#include <QFileDialog>
 #include "OptionsDlg.h"
 
-using namespace std;
-
-BOOL OnInitDialog(HWND hwnd)
+OptionsDlg::OptionsDlg(QWidget* parent, Options *options) 
+	: QWidget(parent), opt(options)
 {
-	return SetDlgItemText(hwnd, IDC_EDIT_PATH_TO_PUTTY, PathToPutty.c_str());
+	setupUi(this);
+
+	syncOptions();
 }
 
-
-void GetPathToPuTTY(HWND hwnd)
+void OptionsDlg::writeBack()
 {
-	int len;
-	wchar_t *buf;
-	
-	len = GetWindowTextLength(GetDlgItem(hwnd, IDC_EDIT_PATH_TO_PUTTY)) + 1;
+	//strings
+	opt->pathToPutty = pathToPuttyText->text();
 
-	buf = (wchar_t*) malloc(sizeof(wchar_t) * len);
+	//boolean
+	opt->catalogSessions = catalogSessionsCheck->checkState() == Qt::Checked;
+	opt->passArgs = passArgsCheck->checkState() == Qt::Checked;
+	opt->keywordSearch = keywordSearchCheck->checkState() == Qt::Checked;
+	opt->useRegex = useRegexCheck->checkState() == Qt::Checked;
 
-	if (buf)
-	{
-		GetDlgItemText(hwnd, IDC_EDIT_PATH_TO_PUTTY, buf, len);
-		PathToPutty = buf;
-		free(buf);
+	//arrays
+	opt->textTriggers.clear();
+	for(int i = 0; i < textTriggersList->count(); ++i) {
+		if (textTriggersList->item(i)->text().isEmpty())
+			continue;
+		opt->textTriggers.append(textTriggersList->item(i)->text());
 	}
 }
 
-
-BOOL BrowseDialog(HWND hwnd)
+void OptionsDlg::syncOptions()
 {
-	OPENFILENAME ofn;       // common dialog box structure
-	wchar_t fileName[260];       // buffer for file name
+	//strings
+	pathToPuttyText->setText(opt->pathToPutty);
 
-	wcscpy_s(fileName, L"PuTTY.exe");
+	//boolean
+	catalogSessionsCheck->setCheckState(opt->catalogSessions?(Qt::Checked):(Qt::Unchecked));
+	passArgsCheck->setCheckState(opt->passArgs?(Qt::Checked):(Qt::Unchecked));
+	keywordSearchCheck->setCheckState(opt->keywordSearch?(Qt::Checked):(Qt::Unchecked));
+	useRegexCheck->setCheckState(opt->useRegex?(Qt::Checked):(Qt::Unchecked));
 
-	// Initialize OPENFILENAME
-	memset(&ofn, 0x00, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hwnd;
-	ofn.lpstrFile = fileName;
-	ofn.nMaxFile = sizeof(fileName);
-	ofn.lpstrFilter = L"PuTTY.exe\0PuTTY.exe\0All Files (*.*)\0*.*\0\0";
-	ofn.nFilterIndex = 1;
-	ofn.lpstrTitle = L"Select Path to PuTTY.exe";
-	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = L"c:\\Program Files\\PuTTY\\";
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+	//arrays
+	textTriggersList->clear();
+	foreach (QString text, opt->textTriggers){
+		QListWidgetItem * item = new QListWidgetItem(text);
+		item->setFlags( item->flags() | Qt::ItemIsEditable );
 
-	// Display the Open dialog box. 
-	if (GetOpenFileName(&ofn)==TRUE)
-		SetDlgItemText(hwnd, IDC_EDIT_PATH_TO_PUTTY, fileName);
-
-	return TRUE;
+		textTriggersList->addItem(item);
+	}
 }
 
- 
-INT_PTR CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam) 
-{ 
-    switch (message) 
-    {
-        case WM_INITDIALOG:
-			return OnInitDialog(hwndDlg);
-			break;
-        case WM_COMMAND:
-            switch(LOWORD(wParam))
-            {
-                case IDOK:
-					GetPathToPuTTY(hwndDlg);
-                    return EndDialog(hwndDlg, IDOK);
-	                break;
-                case IDC_BUTTON_BROWSE:
-					return BrowseDialog(hwndDlg);
-					break;
-				case IDCANCEL:
-					return EndDialog(hwndDlg, IDCANCEL);
-					break;
-				default:
-					return FALSE;
-            }
-			break; 
-        default: 
-            return FALSE; 
-    }
+void OptionsDlg::on_pathToPuttyBrowse_clicked() 
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Locate PuTTY Executable"), "",
+													tr("PuTTY (PuTTY.exe);;All Files (*.*)"));
+
+	if (!fileName.isEmpty()) {
+		pathToPuttyText->setText(fileName);
+	}
+}
+
+void OptionsDlg::on_addTextTriggerButton_clicked()
+{
+	QString text = textTriggerText->text();
+
+	if (!text.isEmpty()) {
+		QListWidgetItem * item = new QListWidgetItem(text);
+		item->setFlags( item->flags() | Qt::ItemIsEditable );
+
+		textTriggersList->addItem(item);
+		textTriggerText->clear();
+	}
+}
+
+void OptionsDlg::on_removeTextTriggerButton_clicked()
+{
+	int index = textTriggersList->currentRow();
+
+	delete textTriggersList->takeItem(index);
 }

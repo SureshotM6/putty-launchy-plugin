@@ -1,284 +1,200 @@
 // BlankPlugin.cpp : Defines the entry point for the DLL application.
 //
 
-#include "stdafx.h"
 #include "PuTTY.h"
-#include "LaunchyPlugin.h"
-#include "OptionsDlg.h"
-#include "resource.h"
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <iterator>
-#include <sstream>
 
-HINSTANCE hInstance;
-wstring PathToPutty;
+const QString PuttyPlugin::PLUGIN_NAME = "PuTTY";
+const QString PuttyPlugin::PLUGIN_VERSION = "2.0";
+const uint PuttyPlugin::HASH_PUTTY = qHash(PuttyPlugin::PLUGIN_NAME);
+const QString PuttyPlugin::PUTTY_ARGS = PuttyPlugin::PLUGIN_NAME + ".args";
 
-void unmungestr(const wstring &in_s, wstring &out_s)
+PuttyPlugin::PuttyPlugin()
+	: opt(NULL)
 {
-	wstring::const_iterator in;
+}
 
-	out_s.clear();
-	back_insert_iterator<wstring> out(out_s);
+int PuttyPlugin::msg(int msgId, void* wParam, void* lParam)
+{
+	bool handled = false;
+	switch (msgId)
+	{		
+		case MSG_INIT:
+			init();
+			handled = true;
+			break;
+		case MSG_GET_LABELS:
+			getLabels((QList<InputData>*) wParam);
+			handled = true;
+			break;
+		case MSG_GET_ID:
+			getID((uint*) wParam);
+			handled = true;
+			break;
+		case MSG_GET_NAME:
+			getName((QString*) wParam);
+			handled = true;
+			break;
+		case MSG_GET_RESULTS:
+			getResults((QList<InputData>*) wParam, (QList<CatItem>*) lParam);
+			handled = true;
+			break;
+		case MSG_GET_CATALOG:
+			getCatalog((QList<CatItem>*) wParam);
+			handled = true;
+			break;
+		case MSG_LAUNCH_ITEM:
+			launchItem((QList<InputData>*) wParam, (CatItem*) lParam);
+			handled = true;
+			break;
+		case MSG_HAS_DIALOG:
+			handled = true;
+			break;
+		case MSG_DO_DIALOG:
+			doDialog((QWidget*) wParam, (QWidget**) lParam);
+			handled = true;
+			break;
+		case MSG_END_DIALOG:
+			endDialog((bool) wParam);
+			handled = true;
+			break;
 
-	for (in = in_s.begin(); in != in_s.end(); ++in) {
-		if (*in == '%' && in[1] && in[2]) {
-			int i, j;
+		default:
+      handled = false;
+			break;
+	}
+		
+	return handled;
+}
 
-			i = in[1] - '0';
-			i -= (i > 9 ? 7 : 0);
-			j = in[2] - '0';
-			j -= (j > 9 ? 7 : 0);
+void PuttyPlugin::init()
+{
+	if (opt)
+		return;
 
-			*out++ = (i << 4) + j;
+	opt = new Options(*settings);
 
-			in += 2;
+	if ( opt->getVersion() == "" ) {
+		opt->writeDefaults();
+	}
+	opt->setVersion(PuttyPlugin::PLUGIN_VERSION);
+}
+
+void PuttyPlugin::getID(uint* id)
+{
+	*id = HASH_PUTTY;
+}
+
+void PuttyPlugin::getName(QString* str)
+{
+	*str = PLUGIN_NAME;
+}
+
+void PuttyPlugin::getLabels(QList<InputData>* id)
+{
+	if (opt->useRegex && id->count() == 1) {
+		QString text = id->first().getText();
+
+		foreach (const QString trigger, opt->textTriggers)
+		{
+			QString regex = trigger;
+
+			regex.replace(" ", "_");
+
+			regex = "^" + regex + " ";
+
+			if (text.contains(QRegExp(regex, Qt::CaseInsensitive)))
+			{
+				id->first().setLabel(HASH_PUTTY);
+			}
+		}
+	}
+}
+
+void PuttyPlugin::getResults(QList<InputData>* id, QList<CatItem>* results)
+{
+	QString text = id->last().getText();
+	bool regexMatch = id->first().hasLabel(HASH_PUTTY);
+	bool textMatch = (id->first().getTopResult().id == HASH_PUTTY && id->count() > 1);
+
+	if (textMatch || regexMatch) {
+		if (regexMatch) {
+			text.replace(QRegExp("^[^ ]* +", Qt::CaseInsensitive), "");
+		}
+
+		PuttySessions sessions = PuttySessions();
+
+		QStringList matchedSessions; 
+
+		if (opt->keywordSearch) {
+			matchedSessions = sessions.matchKeywords(text);
 		}else{
-			*out++ = *in;
+			matchedSessions = sessions.matchLiteral(text);
+		}
+
+		if (!matchedSessions.isEmpty()) {
+			foreach (QString session, matchedSessions) {
+				results->push_front(CatItem(session + "." + PLUGIN_NAME, session, HASH_PUTTY, getIcon()));
+			}
+		}else
+		if (opt->passArgs) {
+			results->push_front(CatItem(text + "." + PUTTY_ARGS, text, HASH_PUTTY, getIcon()));
 		}
 	}
 }
 
-void EscapeQuotes(const wstring &in_s, wstring &out_s)
+QString PuttyPlugin::getIcon()
 {
-	wstring::const_iterator in;
-
-	out_s.clear();
-	back_insert_iterator<wstring> out(out_s);
-
-	for (in = in_s.begin(); in != in_s.end(); ++in) {
-		if (*in == '"') {
-			*out++ = '\\';
-			*out++ = '"';
-		}else{
-			*out++ = *in;
-		}
-	}
-}
-
-void lc(wstring &in) {
-	transform(in.begin(), in.end(), in.begin(), tolower);
-}
-
-void lc(const wstring &in, wstring &out) {
-	back_insert_iterator<wstring> output(out);
-	out.clear();
-	transform(in.begin(), in.end(), output, tolower);
-}
-
-vector<wstring> GenerateSessionNames()
-{
-	vector<wstring> sessions;
-	HKEY key;
-	int i;
-	wchar_t keyname[255];
-	wstring keyname_unmunged;
-
-	if (RegOpenKey(HKEY_CURRENT_USER, PUTTY_SESSION_REG_POS, &key) == ERROR_SUCCESS) {
-		for (i=0; RegEnumKey(key, i, keyname, sizeof(keyname)) == ERROR_SUCCESS; ++i) {
-			//remove %xx's
-			unmungestr(wstring(keyname), keyname_unmunged);
-
-			sessions.push_back(keyname_unmunged);
-		}
-
-		RegCloseKey(key);
-	}
-
-	return sessions;
-}
-
-#ifdef _MANAGED
-#pragma managed(push, off)
-#endif
-
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-					 )
-{
-	hInstance = hModule;
-    return TRUE;
-}
-
-#ifdef _MANAGED
-#pragma managed(pop)
-#endif
-
-bool PluginOwnsSearch (TCHAR* txt) 
-{
-	return false;
-}
-
-
-
-SearchResult* PluginGetIdentifiers (int* iNumResults)
-{
-	vector<SearchResult> results;
-	results.push_back(makeResult(L"PuTTY", L"", L"", NULL));
-	results.push_back(makeResult(L"ssh", L"", L"", NULL));
-
-	*iNumResults = (int) results.size();
-	return ResultVectorToArray(results);
-}
-
-TCHAR* PluginGetRegexs(int* iNumResults)
-{
-	vector<wstring> vect;
-	vect.push_back(L"^[Pp][uU][Tt][Tt][Yy] .*");
-	vect.push_back(L"^[sS][sS][hH] .*");
-	*iNumResults = (int) vect.size();
-	return StringVectorToTCHAR(vect);
-}
-
-bool FoundAllKeywords(const wstring &haystack, const wstring &keywords) {
-	wstring needle;
-	wstringstream tokenizer(keywords);
-
-	while (tokenizer >> needle) {
-		if (wstring::npos == haystack.find(needle)) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
-SearchResult* PluginUpdateSearch (int NumStrings, const TCHAR* Strings, const TCHAR* FinalString, int* NumResults)
-{
-	vector<SearchResult> results;
-	vector<wstring> sessions;
-	vector<wstring>::const_iterator session;
-	wstring session_lc;
-	wstring searchString = FinalString;
-
-	if (NumStrings == 0) {
-		//we are in a regex
-		wstring::size_type start;
-		start = searchString.find_first_of(L" ");
-		if (wstring::npos != start)
-			searchString = searchString.substr(start);
-	}else if (NumStrings >= 2) {
-		//person has hit tab twice, so ignore it
-		*NumResults = 0;
-		return NULL;
-	}
-
-	lc(searchString);
-
-	//add sessions here
-	sessions = GenerateSessionNames();
-
-	for (session = sessions.begin(); session != sessions.end(); ++session) {
-		//make the keyname lowercase for searching
-		lc(*session, session_lc);
-
-		//only add if the search string is found
-		if (FoundAllKeywords(session_lc, searchString)) {
-			results.push_back(makeResult(*session, *session, PLUGIN_NAME L" " + *session, NULL));
-		}
-	}
-
-	*NumResults = (int) results.size();
-	return ResultVectorToArray(results);
-}
-
-SearchResult* PluginFileOptions (const TCHAR* FullPath, int NumStrings, const TCHAR* Strings, const TCHAR* FinalString, int* NumResults) 
-{
-	*NumResults = 0;
+#ifdef Q_WS_WIN
+	return qApp->applicationDirPath() + "/Plugins/icons/PuTTY.ico";
+#else
 	return NULL;
+#endif
 }
 
+void PuttyPlugin::getCatalog(QList<CatItem>* items)
+{
+	foreach (QString trigger, opt->textTriggers)
+	{
+		items->push_back(CatItem(trigger + "." + PLUGIN_NAME, trigger, HASH_PUTTY, getIcon()));
+	}
 
-void PluginDoAction (int NumStrings, const TCHAR* Strings, const TCHAR* FinalString, const TCHAR* FullPath) {
-	wstring cmd, params, profile, safe_profile;
-	vector<wstring> sessions;
+	if (opt->catalogSessions) {
+		PuttySessions sessions = PuttySessions();
+		
+		foreach (QString session, sessions) {
+			items->push_back(CatItem(session + "." + PLUGIN_NAME, session, HASH_PUTTY, getIcon()));
+		}
+	}
+}
 
-	cmd = PathToPutty.empty() ? L"putty" : PathToPutty;
+void PuttyPlugin::launchItem(QList<InputData>* id, CatItem* item)
+{
+	QString file = (opt->pathToPutty.isEmpty())?("putty.exe"):(opt->pathToPutty);
+	QString args = "";
 
-	if (NumStrings >= 2) {
-		//try to remove header if person hit tab too many times
-		vector<wstring> stringVec = TCHARListToVector(NumStrings, Strings);
+	CatItem result = id->last().getTopResult();
 
-		profile = stringVec[1];
-	}else
-	if (wcslen(FullPath) != 0) {
-		//we matched a profile
-		profile = FullPath;
-	}else
-	if (NumStrings == 0) {
-		//we are in a regex
-		profile = FinalString;
-		wstring::size_type start;
-		start = profile.find_first_of(L" ");
-		if (wstring::npos != start) {
-			profile = profile.substr(start);
-		}else{
-			profile = L"";
+	QString sessionName = result.shortName;
+	bool argumentMatch = result.fullPath.endsWith("." + PUTTY_ARGS);
+
+	if (argumentMatch) {
+		if (opt->passArgs) {
+			args = sessionName;
 		}
 	}else{
-		//we are in normal tab completion with no matches
-		profile = FinalString;
+		PuttySessions::EscapeQuotes(sessionName);
+		args = "-load \"" + sessionName + "\"";
 	}
 
-	sessions = GenerateSessionNames();
-
-	if (find(sessions.begin(), sessions.end(), profile) != sessions.end()) {
-		EscapeQuotes(profile, safe_profile);
-
-		params = L"-load \"" + safe_profile + L"\"";
-	}else{
-		//not a profile, so try to load as a hostname
-		params = profile;
-	}
-
-	SHELLEXECUTEINFO ShExecInfo;
-	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-	ShExecInfo.fMask = NULL;
-	ShExecInfo.hwnd = NULL;
-	ShExecInfo.lpVerb = NULL;
-	ShExecInfo.lpFile = cmd.c_str();
-	ShExecInfo.lpParameters = params.c_str();
-	ShExecInfo.lpDirectory = NULL;
-	ShExecInfo.nShow = SW_NORMAL;
-	ShExecInfo.hInstApp = NULL;
-
-	ShellExecuteEx(&ShExecInfo);
+	runProgram(file, args);
 }
 
-TCHAR* PluginGetSeparator() {
-	wstring tmp = L" ";
-	return string2TCHAR(tmp);
+void PuttyPlugin::doDialog(QWidget* parent, QWidget** newDlg) {
+	*newDlg = opt->getDlg(parent);
 }
 
-TCHAR* PluginGetName() {
-	wstring tmp = PLUGIN_NAME;
-	return string2TCHAR(tmp);
+void PuttyPlugin::endDialog(bool accept) {
+	opt->killDlg(accept);
 }
 
-TCHAR* PluginGetDescription() {
-	wstring tmp = PLUGIN_DESCRIPTION;
-	return string2TCHAR(tmp);
-}
-
-void PluginClose() {
-	return;
-}
-
-void PluginInitialize() {
-	PathToPutty = RetrieveString(L"PUTTY_PLUGIN_PATH_TO_PUTTY");
-}
-
-void PluginSaveOptions() {
-	StoreString(L"PUTTY_PLUGIN_PATH_TO_PUTTY", PathToPutty);
-}
-
-void PluginCallOptionsDlg(HWND parent) {
-	DialogBox(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), parent, OptionsDlgProc);
-}
-
-bool PluginHasOptionsDlg() {
-	return true;
-}
-
+Q_EXPORT_PLUGIN2(putty, PuttyPlugin) 

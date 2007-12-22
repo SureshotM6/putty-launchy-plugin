@@ -1,10 +1,36 @@
 #pragma once
 
-#include <string>
+#include <QtPlugin>
+#include <QRegExp>
+#include "plugin_interface.h"
+#include "Options.h"
+#include "PuttySessions.h"
 
-extern std::wstring PathToPutty;
+class PuttyPlugin : public QObject, public PluginInterface
+{
+	Q_OBJECT
+	Q_INTERFACES(PluginInterface)
 
-#define PUTTY_SESSION_REG_POS L"Software\\SimonTatham\\PuTTY\\Sessions"
+private:
+	static const QString PLUGIN_NAME;
+	static const QString PLUGIN_VERSION;
+	static const uint HASH_PUTTY;
+	static const QString PUTTY_ARGS;
 
-#define PLUGIN_NAME L"PuTTY"
-#define PLUGIN_DESCRIPTION L"Adds PuTTY sessions name completion."
+	Options *opt;
+public:
+	PuttyPlugin(); 
+
+	int msg(int msgId, void* wParam = NULL, void* lParam = NULL); 
+
+	void getLabels(QList<InputData>*);
+	void getID(uint*);
+	void getName(QString*);
+	void getResults(QList<InputData>* id, QList<CatItem>* results);
+	void getCatalog(QList<CatItem>* items);
+	void launchItem(QList<InputData>*, CatItem*);
+	void doDialog(QWidget* parent, QWidget**);
+	void endDialog(bool accept);
+	void init();
+	QString getIcon();
+};

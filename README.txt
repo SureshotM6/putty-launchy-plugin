@@ -17,6 +17,10 @@ permutation of "home," "linux," and "ssh."
 
 
 CHANGELOG
+v2.0
+    Now supports Launchy v2.0 (complete rewrite)
+    Added configurable options for just about everything
+
 v1.3
     Parameters not matching a session name will now be treated as a host name
     Session names containing quote marks now work
