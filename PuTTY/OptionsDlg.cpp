@@ -11,48 +11,49 @@ OptionsDlg::OptionsDlg(QWidget* parent, Options *options)
 
 void OptionsDlg::writeBack()
 {
-	//strings
-	opt->pathToPutty = pathToPuttyText->text();
-
-	//boolean
-	opt->catalogSessions = catalogSessionsCheck->checkState() == Qt::Checked;
-	opt->passArgs = passArgsCheck->checkState() == Qt::Checked;
-	opt->keywordSearch = keywordSearchCheck->checkState() == Qt::Checked;
-	opt->useRegex = useRegexCheck->checkState() == Qt::Checked;
-
-	//arrays
-	opt->textTriggers.clear();
-	for(int i = 0; i < textTriggersList->count(); ++i) {
-		if (textTriggersList->item(i)->text().isEmpty())
-			continue;
-		opt->textTriggers.append(textTriggersList->item(i)->text());
+#define XSTRING(name, def) \
+	opt->name = name##Text->text();
+#define XBOOL(name, def) \
+	opt->name = name##Check->checkState() == Qt::Checked;
+#define XSTRINGLIST(name, def) \
+	opt->name.clear(); \
+	for(int i = 0; i < name##List->count(); ++i) { \
+		if (name##List->item(i)->text().isEmpty()) \
+			continue; \
+		opt->name.append(name##List->item(i)->text()); \
 	}
+
+#include "options.def"
+
+#undef XSTRING
+#undef XBOOL
+#undef XSTRINGLIST
 }
 
 void OptionsDlg::syncOptions()
 {
-	//strings
-	pathToPuttyText->setText(opt->pathToPutty);
-
-	//boolean
-	catalogSessionsCheck->setCheckState(opt->catalogSessions?(Qt::Checked):(Qt::Unchecked));
-	passArgsCheck->setCheckState(opt->passArgs?(Qt::Checked):(Qt::Unchecked));
-	keywordSearchCheck->setCheckState(opt->keywordSearch?(Qt::Checked):(Qt::Unchecked));
-	useRegexCheck->setCheckState(opt->useRegex?(Qt::Checked):(Qt::Unchecked));
-
-	//arrays
-	textTriggersList->clear();
-	foreach (QString text, opt->textTriggers){
-		QListWidgetItem * item = new QListWidgetItem(text);
-		item->setFlags( item->flags() | Qt::ItemIsEditable );
-
-		textTriggersList->addItem(item);
+#define XSTRING(name, def) \
+	name##Text->setText(opt->name);
+#define XBOOL(name, def) \
+	name##Check->setCheckState(opt->name?(Qt::Checked):(Qt::Unchecked));
+#define XSTRINGLIST(name, def) \
+	name##List->clear(); \
+	foreach (QString text, opt->name) { \
+		QListWidgetItem * item = new QListWidgetItem(text); \
+		item->setFlags( item->flags() | Qt::ItemIsEditable ); \
+		name##List->addItem(item); \
 	}
+
+#include "options.def"
+
+#undef XSTRING
+#undef XBOOL
+#undef XSTRINGLIST
 }
 
 void OptionsDlg::on_pathToPuttyBrowse_clicked() 
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Locate PuTTY Executable"), "",
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Locate PuTTY Executable"), "c:/program files/putty/",
 													tr("PuTTY (PuTTY.exe);;All Files (*.*)"));
 
 	if (!fileName.isEmpty()) {
@@ -78,4 +79,10 @@ void OptionsDlg::on_removeTextTriggerButton_clicked()
 	int index = textTriggersList->currentRow();
 
 	delete textTriggersList->takeItem(index);
+}
+
+void OptionsDlg::on_resetAllButton_clicked()
+{
+	opt->writeDefaults();
+	syncOptions();
 }

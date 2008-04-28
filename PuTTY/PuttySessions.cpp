@@ -1,14 +1,28 @@
 #include "PuttySessions.h"
+#include "PuTTY.h"
 
 const TCHAR PuttySessions::REG_POS[] = L"Software\\SimonTatham\\PuTTY\\Sessions";
 
-PuttySessions::PuttySessions()
+const QString PuttySessions::PUTTY_CMDLINE = PuttyPlugin::PLUGIN_NAME + ".cmdline";
+const QString PuttySessions::PUTTY_REGISTRY = PuttyPlugin::PLUGIN_NAME + ".registry";
+const QString PuttySessions::PUTTY_FILESYSTEM = PuttyPlugin::PLUGIN_NAME + ".filesystem";
+
+PuttySessions::PuttySessions(SessionType type)
 	: QStringList()
 {
-	loadSessions();
+	switch (type) {
+	case REGISTRY:
+		loadRegSessions();
+		break;
+	case FILESYSTEM:
+		loadFsSessions();
+		break;
+	default:
+		break;
+	}
 }
 
-QString PuttySessions::unmungeString(const TCHAR in[]) const
+QString PuttySessions::unmungeString(const TCHAR in[])
 {
 	QString out = QString();
 
@@ -32,7 +46,7 @@ QString PuttySessions::unmungeString(const TCHAR in[]) const
 	return out;
 }
 
-void PuttySessions::loadSessions()
+void PuttySessions::loadRegSessions()
 {
 	QStringList sessions;
 	HKEY key;
@@ -50,6 +64,22 @@ void PuttySessions::loadSessions()
 	}
 }
 
+void PuttySessions::loadFsSessions()
+{
+	QDir dir;
+
+	if (PuttyPlugin::opt->pathToPutty.isEmpty()) {
+		dir = QDir("c:/program files/putty/"); 
+	}else{
+		dir = QDir(PuttyPlugin::opt->pathToPutty);
+		dir.cdUp();
+	}
+
+	if (dir.cd("sessions")) {
+		*this += dir.entryList(QDir::Files);
+	}
+}
+
 void PuttySessions::EscapeQuotes(QString &s)
 {
 	s.replace("\"", "\\\"");
@@ -57,10 +87,10 @@ void PuttySessions::EscapeQuotes(QString &s)
 
 QStringList PuttySessions::matchKeywords(const QString& needle) const
 {
-	QStringList list = *this;
+	QStringList list;
 
 	foreach(QString keyword, needle.split(" ")) {
-		list = list.filter(keyword, Qt::CaseInsensitive);
+		list = filter(keyword, Qt::CaseInsensitive);
 	}
 
 	return list;
@@ -69,4 +99,28 @@ QStringList PuttySessions::matchKeywords(const QString& needle) const
 QStringList PuttySessions::matchLiteral(const QString& needle) const
 {
 	return this->filter(needle, Qt::CaseInsensitive);
+}
+
+QString PuttySessions::TypeToString(SessionType type)
+{
+	switch (type) {
+	case REGISTRY:
+		return PUTTY_REGISTRY;
+	case FILESYSTEM:
+		return PUTTY_FILESYSTEM;
+	default:
+		return PUTTY_CMDLINE;
+	}
+}
+
+PuttySessions::SessionType PuttySessions::StringToType(QString string)
+{
+	if (string.endsWith("." + PUTTY_REGISTRY)) {
+		return REGISTRY;
+	}else
+	if (string.endsWith("." + PUTTY_FILESYSTEM)) {
+		return FILESYSTEM;
+	}else{
+		return CMDLINE;
+	}
 }

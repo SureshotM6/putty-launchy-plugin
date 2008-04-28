@@ -3,13 +3,13 @@
 
 #include "PuTTY.h"
 
+Options *PuttyPlugin::opt = NULL;
+
 const QString PuttyPlugin::PLUGIN_NAME = "PuTTY";
-const QString PuttyPlugin::PLUGIN_VERSION = "2.0";
+const QString PuttyPlugin::PLUGIN_VERSION = "2.1";
 const uint PuttyPlugin::HASH_PUTTY = qHash(PuttyPlugin::PLUGIN_NAME);
-const QString PuttyPlugin::PUTTY_ARGS = PuttyPlugin::PLUGIN_NAME + ".args";
 
 PuttyPlugin::PuttyPlugin()
-	: opt(NULL)
 {
 }
 
@@ -110,8 +110,33 @@ void PuttyPlugin::getLabels(QList<InputData>* id)
 	}
 }
 
+
+unsigned int PuttyPlugin::addSessionsToList(QList<CatItem>* list, PuttySessions::SessionType type, QString matchText)
+{
+	QStringList matchedSessions;
+	PuttySessions sessions = PuttySessions(type);
+	QString typestr = PuttySessions::TypeToString(type);
+
+	if (!matchText.isEmpty()) {
+		if (opt->keywordSearch) {
+			matchedSessions = sessions.matchKeywords(matchText);
+		}else{
+			matchedSessions = sessions.matchLiteral(matchText);
+		}
+	}else{
+		matchedSessions = sessions;
+	}
+
+	foreach (QString session, matchedSessions) {
+		list->push_front(CatItem(session + "." + typestr, session, HASH_PUTTY, getIcon()));
+	}
+
+	return matchedSessions.size();
+}
+
 void PuttyPlugin::getResults(QList<InputData>* id, QList<CatItem>* results)
 {
+	unsigned int matchCount = 0;
 	QString text = id->last().getText();
 	bool regexMatch = id->first().hasLabel(HASH_PUTTY);
 	bool textMatch = (id->first().getTopResult().id == HASH_PUTTY && id->count() > 1);
@@ -121,23 +146,16 @@ void PuttyPlugin::getResults(QList<InputData>* id, QList<CatItem>* results)
 			text.replace(QRegExp("^[^ ]* +", Qt::CaseInsensitive), "");
 		}
 
-		PuttySessions sessions = PuttySessions();
-
-		QStringList matchedSessions; 
-
-		if (opt->keywordSearch) {
-			matchedSessions = sessions.matchKeywords(text);
-		}else{
-			matchedSessions = sessions.matchLiteral(text);
+		if (opt->sessionsFromReg) {
+			matchCount += addSessionsToList(results, PuttySessions::REGISTRY, text);
 		}
 
-		if (!matchedSessions.isEmpty()) {
-			foreach (QString session, matchedSessions) {
-				results->push_front(CatItem(session + "." + PLUGIN_NAME, session, HASH_PUTTY, getIcon()));
-			}
-		}else
-		if (opt->passArgs) {
-			results->push_front(CatItem(text + "." + PUTTY_ARGS, text, HASH_PUTTY, getIcon()));
+		if (opt->sessionsFromFs) {
+			matchCount += addSessionsToList(results, PuttySessions::FILESYSTEM, text);
+		}
+
+		if (opt->passArgs && matchCount == 0) {
+			results->push_front(CatItem(text + "." + PuttySessions::TypeToString(PuttySessions::CMDLINE), text, HASH_PUTTY, getIcon()));
 		}
 	}
 }
@@ -159,10 +177,12 @@ void PuttyPlugin::getCatalog(QList<CatItem>* items)
 	}
 
 	if (opt->catalogSessions) {
-		PuttySessions sessions = PuttySessions();
-		
-		foreach (QString session, sessions) {
-			items->push_back(CatItem(session + "." + PLUGIN_NAME, session, HASH_PUTTY, getIcon()));
+		if (opt->sessionsFromReg) {
+			addSessionsToList(items, PuttySessions::REGISTRY, "");
+		}
+
+		if (opt->sessionsFromFs) {
+			addSessionsToList(items, PuttySessions::FILESYSTEM, "");
 		}
 	}
 }
@@ -175,18 +195,28 @@ void PuttyPlugin::launchItem(QList<InputData>* id, CatItem* item)
 	CatItem result = id->last().getTopResult();
 
 	QString sessionName = result.shortName;
-	bool argumentMatch = result.fullPath.endsWith("." + PUTTY_ARGS);
+	PuttySessions::SessionType type = PuttySessions::StringToType(result.fullPath);
 
-	if (argumentMatch) {
-		if (opt->passArgs) {
-			args = sessionName;
-		}
-	}else{
+	switch (type) {
+	case PuttySessions::REGISTRY:
 		PuttySessions::EscapeQuotes(sessionName);
 		args = "-load \"" + sessionName + "\"";
+		break;
+	case PuttySessions::FILESYSTEM:
+		PuttySessions::EscapeQuotes(sessionName);
+		args = "-loadfile \"" + sessionName + "\"";
+		break;
+	default:
+		args = sessionName;
+		break;
 	}
 
-	runProgram(file, args);
+	if (runProgramWin(file, args, opt->startMaximized) == false) {
+		MessageBox(NULL,
+			L"Cannot launch PuTTY!  Please make sure that 'putty.exe' is either in your PATH or select the path to PuTTY in the options dialog.",
+			NULL,
+			MB_OK);
+	}
 }
 
 void PuttyPlugin::doDialog(QWidget* parent, QWidget** newDlg) {
@@ -196,5 +226,31 @@ void PuttyPlugin::doDialog(QWidget* parent, QWidget** newDlg) {
 void PuttyPlugin::endDialog(bool accept) {
 	opt->killDlg(accept);
 }
+
+bool PuttyPlugin::runProgramWin(QString path, QString args, bool maximize)
+{
+	SHELLEXECUTEINFO ShExecInfo;
+
+	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+	ShExecInfo.fMask = SEE_MASK_FLAG_NO_UI;
+	ShExecInfo.hwnd = NULL;
+	ShExecInfo.lpVerb = NULL;
+	ShExecInfo.lpFile = (LPCTSTR) (path).utf16();
+	if (args != "") {
+		ShExecInfo.lpParameters = (LPCTSTR) args.utf16();
+	} else {
+		ShExecInfo.lpParameters = NULL;
+	}
+	QDir dir(path);
+	QFileInfo info(path);
+	if (!info.isDir() && info.isFile())
+		dir.cdUp();
+	ShExecInfo.lpDirectory = (LPCTSTR)QDir::toNativeSeparators(dir.absolutePath()).utf16();
+	ShExecInfo.nShow = (maximize)?(SW_SHOWMAXIMIZED):(SW_SHOWNORMAL);
+	ShExecInfo.hInstApp = NULL;
+
+	return (bool) ShellExecuteEx(&ShExecInfo);	
+}
+
 
 Q_EXPORT_PLUGIN2(putty, PuttyPlugin) 

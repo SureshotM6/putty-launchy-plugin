@@ -4,8 +4,7 @@ http://putty-launchy-plugin.googlecode.com/
 
 
 USAGE
-Version 2.0 of PuTTY Plugin for Launchy will work only with v2.0 (and higher) of 
-Launchy.
+Version 2.0+ of PuTTY Plugin for Launchy will work only with v2.0+ of Launchy.
 
 If PuTTY.exe is not in your system PATH, you will need to set the path to PuTTY 
 in the options dialog.  To access the options, right click on the Launchy window 
@@ -16,8 +15,19 @@ To begin completion, type "ssh" or "putty" followed by tab or space. The plugin
 will list all of your PuTTY sessions.  After you select a session in Launchy, it 
 will be launched in PuTTY.
 
+If you want to use this plugin in portable mode you will first need PuTTY Tray 
+or portaPuTTY in order to save sessions to a filesystem.  Next set the "Path to 
+PuTTY" in the plugin options dialog to the RELATIVE path from the Launchy 
+directory to the PuTTY executable.  Finally, enable loading sessions from the 
+filesystem in the plugin options dialog.
+
 
 CHANGELOG
+v2.1
+    Added option to run PuTTY maximized
+    Added loading sessions from filesystem
+    Added error message when putty.exe can't be found
+
 v2.0
     Now supports Launchy v2.0 (complete rewrite)
     Added configurable options for just about everything

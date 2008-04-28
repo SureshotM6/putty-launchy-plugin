@@ -22,4 +22,5 @@ private slots:
 	void on_pathToPuttyBrowse_clicked();
 	void on_addTextTriggerButton_clicked();
 	void on_removeTextTriggerButton_clicked();
+	void on_resetAllButton_clicked();
 };

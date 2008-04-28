@@ -10,60 +10,63 @@ void Options::readOptions()
 {
 	int arraySize;
 
-	//strings
-	pathToPutty = settings->value("PuTTY/pathToPuTTY").toString();
-
-	//boolean
-	catalogSessions = settings->value("PuTTY/catalogSessions").toBool();
-	passArgs = settings->value("PuTTY/passArgs").toBool();
-	keywordSearch = settings->value("PuTTY/keywordSearch").toBool();
-	useRegex = settings->value("PuTTY/useRegex").toBool();
-
-	//arrays
-	textTriggers.clear();
-	arraySize = settings->beginReadArray("PuTTY/textTriggers");
-		for (int i = 0; i < arraySize; ++i) {
-			settings->setArrayIndex(i);
-			textTriggers.append(settings->value("trigger").toString());
-		}
+#define XSTRING(name, def) \
+	name = settings->value("PuTTY/" #name).toString();
+#define XBOOL(name, def) \
+	name = settings->value("PuTTY/" #name).toBool();
+#define XSTRINGLIST(name, def) \
+	name.clear(); \
+	arraySize = settings->beginReadArray("PuTTY/" #name); \
+		for (int i = 0; i < arraySize; ++i) { \
+			settings->setArrayIndex(i); \
+			textTriggers.append(settings->value("trigger").toString()); \
+		} \
 	settings->endArray();
+
+#include "options.def"
+
+#undef XSTRING
+#undef XBOOL
+#undef XSTRINGLIST
 }
 
 void Options::writeOptions()
 {
-	//strings
-	settings->setValue("PuTTY/pathToPuTTY", pathToPutty);
-
-	//boolean
-	settings->setValue("PuTTY/catalogSessions", catalogSessions);
-	settings->setValue("PuTTY/passArgs", passArgs);
-	settings->setValue("PuTTY/keywordSearch", keywordSearch);
-	settings->setValue("PuTTY/useRegex", useRegex);
-
-	//arrays
-	settings->beginWriteArray("PuTTY/textTriggers");
-		for (int i = 0; i < textTriggers.size(); ++i) {
-			settings->setArrayIndex(i);
-			settings->setValue("trigger", textTriggers.at(i));
-		}
+#define XSTRING(name, def) \
+	settings->setValue("PuTTY/" #name, name);
+#define XBOOL XSTRING
+#define XSTRINGLIST(name, def) \
+	settings->beginWriteArray("PuTTY/" #name); \
+		for (int i = 0; i < name.size(); ++i) { \
+			settings->setArrayIndex(i); \
+			settings->setValue("trigger", name.at(i)); \
+		} \
 	settings->endArray();
+
+#include "options.def"
+
+#undef XSTRING
+#undef XBOOL
+#undef XSTRINGLIST
 }
 
 void Options::writeDefaults()
 {
-	//strings
-	pathToPutty = QString("");
+#define XSTRING(name, def) \
+	name = QString(def);
+#define XBOOL(name, def) \
+	name = def;
+#define XITEM(def) \
+	<< def
+#define XSTRINGLIST(name, def) \
+	name.clear(); \
+	name def;
 
-	//boolean
-	catalogSessions = false;
-	passArgs = true;
-	keywordSearch = true;
-	useRegex = true;
+#include "options.def"
 
-	//arrays
-	textTriggers.clear();
-	textTriggers.append("PuTTY");
-	textTriggers.append("ssh");
+#undef XSTRING
+#undef XBOOL
+#undef XSTRINGLIST
 
 	//write back
 	writeOptions();

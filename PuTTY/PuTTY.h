@@ -12,16 +12,9 @@ class PuttyPlugin : public QObject, public PluginInterface
 	Q_INTERFACES(PluginInterface)
 
 private:
-	static const QString PLUGIN_NAME;
-	static const QString PLUGIN_VERSION;
 	static const uint HASH_PUTTY;
-	static const QString PUTTY_ARGS;
 
-	Options *opt;
-public:
-	PuttyPlugin(); 
-
-	int msg(int msgId, void* wParam = NULL, void* lParam = NULL); 
+	unsigned int addSessionsToList(QList<CatItem>* list, PuttySessions::SessionType type, QString matchText);
 
 	void getLabels(QList<InputData>*);
 	void getID(uint*);
@@ -32,5 +25,16 @@ public:
 	void doDialog(QWidget* parent, QWidget**);
 	void endDialog(bool accept);
 	void init();
+	bool runProgramWin(QString path, QString args, bool maximize);
 	QString getIcon();
+
+public:
+	static const QString PLUGIN_NAME;
+	static const QString PLUGIN_VERSION;
+
+	static Options *opt;
+
+	PuttyPlugin(); 
+
+	int msg(int msgId, void* wParam = NULL, void* lParam = NULL); 
 };

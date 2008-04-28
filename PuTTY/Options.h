@@ -12,14 +12,19 @@ private:
 	QSettings *settings;
 	OptionsDlg* dlg;
 public:
-	QString pathToPutty;
 
-	bool catalogSessions;
-	bool passArgs;
-	bool keywordSearch;
-	bool useRegex;
+#define XSTRING(name, def) \
+	QString name;
+#define XBOOL(name, def) \
+	bool name;
+#define XSTRINGLIST(name, def) \
+	QStringList name;
 
-	QStringList textTriggers;
+#include "options.def"
+
+#undef XSTRING
+#undef XBOOL
+#undef XSTRINGLIST
 
 	Options(QSettings* _settings);
 	void readOptions();

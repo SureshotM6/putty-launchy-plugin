@@ -7,11 +7,25 @@ class PuttySessions : public QStringList
 {
 private:
 	static const TCHAR REG_POS[];
-	QString unmungeString(const TCHAR in[]) const;
-	void loadSessions();
+	static QString unmungeString(const TCHAR in[]);
+	void loadRegSessions();
+	void loadFsSessions();
+
+	static const QString PUTTY_CMDLINE;
+	static const QString PUTTY_REGISTRY;
+	static const QString PUTTY_FILESYSTEM;
 
 public:
-	PuttySessions();
+	static const enum SessionType {
+		REGISTRY,
+		FILESYSTEM,
+		CMDLINE
+	};
+
+	static QString TypeToString(SessionType type);
+	static SessionType StringToType(QString string);
+
+	PuttySessions(SessionType type);
 
 	QStringList matchKeywords(const QString& needle) const;
 	QStringList matchLiteral(const QString& needle) const;

@@ -91,6 +91,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\options.def"
+				>
+			</File>
+			<File
 				RelativePath=".\Options.h"
 				>
 			</File>
