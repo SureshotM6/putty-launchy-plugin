@@ -121,8 +121,7 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\PuTTY.ico"
-				DeploymentContent="true"
+				RelativePath=".\putty.png"
 				>
 			</File>
 			<File
@@ -135,7 +134,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\ReadMe.txt"
+			RelativePath="..\README.txt"
 			>
 		</File>
 	</Files>

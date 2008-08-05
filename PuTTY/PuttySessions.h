@@ -17,6 +17,7 @@ private:
 
 public:
 	static const enum SessionType {
+		UNKNOWN,
 		REGISTRY,
 		FILESYSTEM,
 		CMDLINE

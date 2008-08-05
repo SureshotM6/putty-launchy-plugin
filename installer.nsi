@@ -56,6 +56,6 @@ Section "" ;No components page, name is not important
 
   SetOutPath $INSTDIR\Plugins\icons
 
-  File PuTTY\PuTTY.ico
+  File PuTTY\putty.png
   
 SectionEnd ; end the section

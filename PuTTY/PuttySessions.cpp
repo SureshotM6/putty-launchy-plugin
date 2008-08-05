@@ -120,7 +120,10 @@ PuttySessions::SessionType PuttySessions::StringToType(QString string)
 	}else
 	if (string.endsWith("." + PUTTY_FILESYSTEM)) {
 		return FILESYSTEM;
-	}else{
+	}else
+	if (string.endsWith("." + PUTTY_CMDLINE)) {
 		return CMDLINE;
+	}else{
+		return UNKNOWN;
 	}
 }

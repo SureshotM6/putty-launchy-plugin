@@ -23,6 +23,10 @@ filesystem in the plugin options dialog.
 
 
 CHANGELOG
+v2.2
+    New icon in PNG format for compatibility with Launchy 2.1
+    PuTTY configuration dialog now starts when no session is specified
+
 v2.1
     Added option to run PuTTY maximized
     Added loading sessions from filesystem
@@ -60,3 +64,5 @@ Portions of this code are part of the Launchy project:
     http://www.launchy.net
 Portions of this code originated from the PuTTY project:
     http://www.chiark.greenend.org.uk/~sgtatham/putty/
+The icon is used from the PuTTY Portable project:
+	http://portableapps.com/apps/internet/putty_portable

@@ -29,17 +29,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <QDir>
 #include <QSet>
 
+
+/** 
+\brief CatItem (Catalog Item) stores a single item in the index
+*/
 class CatItem {
 public:
+    
+	/** The full path of the indexed item */
 	QString fullPath;
+	/** The abbreviated name of the indexed item */
 	QString shortName;
+	/** The lowercase name of the indexed item */
 	QString lowName;
+	/** A path to an icon for the item */
 	QString icon;
+	/** How many times this item has been called by the user */
 	int usage;
+	/** This is unused, and meant for plugin writers and future extensions */
 	void* data;
+	/** The plugin id of the creator of this CatItem */
 	int id;
 
 	CatItem() {}
+
 
 
 	CatItem(QString full, bool isDir = false) 
@@ -77,7 +90,14 @@ public:
 		data = NULL;
 		usage = 0;
 	}
-
+	/** This is the constructor most used by plugins 
+	\param full The full path of the file to execute
+	\param The abbreviated name for the entry
+	\param i_d Your plugin id (0 for Launchy itself)
+	\param iconPath The path to the icon for this entry
+	\warning It is usually a good idea to append ".your_plugin_name" to the end of the full parameter
+	so that there are not multiple items in the index with the same full path.
+	*/
 	CatItem(QString full, QString shortN, uint i_d, QString iconPath) 
 		: id(i_d), fullPath(full), shortName(shortN), icon(iconPath)
 	{
@@ -116,25 +136,57 @@ public:
 };
 
 
+/** InputData shows one segment (between tabs) of a user's query 
+	A user's query is typically represented by List<InputData>
+	and each element of the list represents a segment of the query.
 
+	E.g.  query = "google <tab> this is my search" will have 2 InputData segments
+	in the list.  One for "google" and one for "this is my search"
+*/
 class InputData 
 {
 private:
+	/** The user's entry */
 	QString text;
+	/** Any assigned labels to this query segment */
 	QSet<uint> labels;
+	/** A pointer to the best catalog match for this segment of the query */
 	CatItem topResult;
+	/** The plugin id of this query's owner */
 	uint id;
 public:
+	/** Get the labels applied to this query segment */
 	QSet<uint>  getLabels() { return labels; }
+	/** Apply a label to this query segment */
 	void setLabel(uint l) { labels.insert(l); }
+	/** Check if it has the given label applied to it */
 	bool hasLabel(uint l) { return labels.contains(l); }
 
+	/** Set the id of this query
+
+	This can be used to override the owner of the selected catalog item, so that 
+	no matter what item is chosen from the catalog, the given plugin will be the one
+	to execute it.
+
+	\param i The plugin id of the plugin to execute the query's best match from the catalog
+	*/
 	void setID(uint i) { id = i; }
+
+	/** Returns the current owner id of the query */
 	uint getID() { return id; }
+
+	/** Get the text of the query segment */
 	QString  getText() { return text; }
+
+	/** Set the text of the query segment */
 	void setText(QString t) { text = t; }
+
+	/** Get a pointer to the best catalog match for this segment of the query */
 	CatItem&  getTopResult() { return topResult; }
+
+	/** Change the best catalog match for this segment */
 	void setTopResult(CatItem sr) { topResult = sr; }
+
 	InputData() { id = 0; }
 	InputData(QString str) : text(str) { id = 0;}
 };
@@ -162,57 +214,7 @@ inline QDataStream &operator>>(QDataStream &in, CatItem &item) {
 	return in;
 }
 
-class Catalog {
-public:
-	Catalog() {}
-	virtual ~Catalog() {}
-	virtual void addItem(CatItem item) = 0;
-	virtual int count() = 0;
-	virtual const CatItem & getItem(int) = 0;
-	static bool matches(CatItem* item, QString& txt);
-
-	void searchCatalogs(QString, QList<CatItem> & );
-	virtual void incrementUsage(const CatItem& item) = 0;
-	virtual int getUsage(const QString& path) = 0;
-	void checkHistory(QString txt, QList<CatItem> & list);
-
-private:	
-	virtual QList<CatItem*> search(QString) = 0;
-
-};
 
 
-
-// The fast catalog searches quickly but 
-// addition of items is slow and uses a lot of memory
-class FastCatalog : public Catalog {
-private:
-	QList<CatItem> catList;
-	QHash<QChar, QList<CatItem*> > catIndex;
-public:
-	FastCatalog() : Catalog() {}
-	void addItem(CatItem item);
-	QList<CatItem*> search(QString);
-	int count() { return catList.count(); }
-	const CatItem & getItem(int i) { return catList[i]; }
-	void incrementUsage(const CatItem& item);
-	int getUsage(const QString& path);
-};
-
-// The slow catalog searches slowly but
-// adding items is fast and uses less memory
-// than FastCatalog
-class SlowCatalog : public Catalog {
-private:
-	QList<CatItem> catList;
-public:
-	SlowCatalog() : Catalog() {}
-	void addItem(CatItem item);
-	QList<CatItem*> search(QString);
-	int count() { return catList.count(); }
-	const CatItem & getItem(int i) { return catList[i]; }
-	void incrementUsage(const CatItem& item);
-	int getUsage(const QString& path);
-};
 
 #endif

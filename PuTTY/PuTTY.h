@@ -27,6 +27,9 @@ private:
 	void init();
 	bool runProgramWin(QString path, QString args, bool maximize);
 	QString getIcon();
+	void setPath(QString * path);
+
+	QString libPath;
 
 public:
 	static const QString PLUGIN_NAME;

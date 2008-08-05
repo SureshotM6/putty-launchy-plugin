@@ -6,7 +6,7 @@
 Options *PuttyPlugin::opt = NULL;
 
 const QString PuttyPlugin::PLUGIN_NAME = "PuTTY";
-const QString PuttyPlugin::PLUGIN_VERSION = "2.1";
+const QString PuttyPlugin::PLUGIN_VERSION = "2.2";
 const uint PuttyPlugin::HASH_PUTTY = qHash(PuttyPlugin::PLUGIN_NAME);
 
 PuttyPlugin::PuttyPlugin()
@@ -57,7 +57,9 @@ int PuttyPlugin::msg(int msgId, void* wParam, void* lParam)
 			endDialog((bool) wParam);
 			handled = true;
 			break;
-
+		case MSG_PATH:
+			setPath((QString*) wParam);
+			break;
 		default:
       handled = false;
 			break;
@@ -162,11 +164,12 @@ void PuttyPlugin::getResults(QList<InputData>* id, QList<CatItem>* results)
 
 QString PuttyPlugin::getIcon()
 {
-#ifdef Q_WS_WIN
-	return qApp->applicationDirPath() + "/Plugins/icons/PuTTY.ico";
-#else
-	return NULL;
-#endif
+	return libPath + "/icons/putty.png";
+}
+
+void PuttyPlugin::setPath(QString * path)
+{
+    libPath = *path;
 }
 
 void PuttyPlugin::getCatalog(QList<CatItem>* items)
@@ -206,8 +209,12 @@ void PuttyPlugin::launchItem(QList<InputData>* id, CatItem* item)
 		PuttySessions::EscapeQuotes(sessionName);
 		args = "-loadfile \"" + sessionName + "\"";
 		break;
-	default:
+	case PuttySessions::CMDLINE:
 		args = sessionName;
+		break;
+	default:
+		/* just start putty by itself */
+		args = "";
 		break;
 	}
 
