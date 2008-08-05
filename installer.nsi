@@ -6,6 +6,7 @@
 ; there. 
 
 !include "LogicLib.nsh"
+!include "nsProcess.nsh"
 
 ;--------------------------------
 
@@ -23,11 +24,13 @@ InstallDir $PROGRAMFILES\Launchy
 ;wait for Launchy to exit
 Function WaitForLaunchy
   ${Do}
-    Processes::FindProcess "Launchy"
-    ${If} $R0 = 1
-      MessageBox MB_RETRYCANCEL "Launchy is currently running.  Please quit Launchy first to install this plugin." IDCANCEL canceled
+    ${nsProcess::FindProcess} "Launchy.exe" $R0
+    ${If} $R0 = 0
+      MessageBox MB_ABORTRETRYIGNORE "Launchy is currently running.  Please quit Launchy first to install this plugin." IDABORT canceled IDIGNORE ignored
     ${EndIf}
-  ${LoopUntil} $R0 = 0
+  ${LoopUntil} $R0 != 0
+ignored:
+  ${nsProcess::Unload}
   Return
 canceled:
   Quit
