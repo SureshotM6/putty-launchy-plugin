@@ -75,7 +75,7 @@ void PuttySessions::loadFsSessions()
 		dir.cdUp();
 	}
 
-	if (dir.cd("sessions")) {
+	if (dir.cd(PuttyPlugin::opt->sessionsFromFsDir)) {
 		*this += dir.entryList(QDir::Files);
 	}
 }

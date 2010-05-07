@@ -23,6 +23,11 @@ filesystem in the plugin options dialog.
 
 
 CHANGELOG
+v2.3
+    Rebuilt for use with Launchy 2.5+
+    Added additional options for loading sessions from files
+    Supports custom command line arguments (allows for pageant integration)
+
 v2.2
     New icon in PNG format for compatibility with Launchy 2.1
     PuTTY configuration dialog now starts when no session is specified

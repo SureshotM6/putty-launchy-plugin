@@ -23,4 +23,5 @@ private slots:
 	void on_addTextTriggerButton_clicked();
 	void on_removeTextTriggerButton_clicked();
 	void on_resetAllButton_clicked();
+	void on_sessionsFromFsCheck_stateChanged(int state);
 };

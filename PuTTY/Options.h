@@ -30,6 +30,7 @@ public:
 	void readOptions();
 	void writeOptions();
 	void writeDefaults();
+	void upgradeDefaults();
 	QWidget* getDlg(QWidget* parent);
 	void killDlg(bool save);
 	QString getVersion();

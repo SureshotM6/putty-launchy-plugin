@@ -66,10 +66,38 @@ void Options::writeDefaults()
 
 #undef XSTRING
 #undef XBOOL
+#undef XITEM
 #undef XSTRINGLIST
 
 	//write back
 	writeOptions();
+}
+
+void Options::upgradeDefaults()
+{
+	/* write missing elements */
+#define EXISTS(name) settings->contains("PuTTY/" #name)
+#define XSTRING(name, def) \
+	if (!EXISTS(name)) name = QString(def);
+#define XBOOL(name, def) \
+	if (!EXISTS(name)) name = def;
+#define XITEM(def) \
+	<< def
+#define XSTRINGLIST(name, def) \
+	if (!EXISTS(name/size)) name def;
+
+#include "options.def"
+
+#undef XSTRING
+#undef XBOOL
+#undef XITEM
+#undef XSTRINGLIST
+#undef EXISTS
+
+	/* add any special version to version changes here */
+
+	//to write back or not to write back, that is the question
+	//lets not since that may allow us to change the default later
 }
 
 QWidget* Options::getDlg(QWidget* parent)

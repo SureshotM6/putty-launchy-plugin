@@ -6,7 +6,7 @@
 Options *PuttyPlugin::opt = NULL;
 
 const QString PuttyPlugin::PLUGIN_NAME = "PuTTY";
-const QString PuttyPlugin::PLUGIN_VERSION = "2.2";
+const QString PuttyPlugin::PLUGIN_VERSION = "2.3";
 const uint PuttyPlugin::HASH_PUTTY = qHash(PuttyPlugin::PLUGIN_NAME);
 
 PuttyPlugin::PuttyPlugin()
@@ -70,6 +70,8 @@ int PuttyPlugin::msg(int msgId, void* wParam, void* lParam)
 
 void PuttyPlugin::init()
 {
+	QString oldver;
+
 	if (opt)
 		return;
 
@@ -77,7 +79,10 @@ void PuttyPlugin::init()
 
 	if ( opt->getVersion() == "" ) {
 		opt->writeDefaults();
+	}else{
+		opt->upgradeDefaults();
 	}
+
 	opt->setVersion(PuttyPlugin::PLUGIN_VERSION);
 }
 
@@ -207,7 +212,7 @@ void PuttyPlugin::launchItem(QList<InputData>* id, CatItem* item)
 		break;
 	case PuttySessions::FILESYSTEM:
 		PuttySessions::EscapeQuotes(sessionName);
-		args = "-loadfile \"" + sessionName + "\"";
+		args = opt->sessionsFromFsOption + " \"" + sessionName + "\"";
 		break;
 	case PuttySessions::CMDLINE:
 		args = sessionName;
@@ -217,6 +222,8 @@ void PuttyPlugin::launchItem(QList<InputData>* id, CatItem* item)
 		args = "";
 		break;
 	}
+
+	args = opt->additionalArgs + " " + args;
 
 	if (runProgramWin(file, args, opt->startMaximized) == false) {
 		MessageBox(NULL,

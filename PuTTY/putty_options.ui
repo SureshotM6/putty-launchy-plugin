@@ -1,26 +1,27 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>PuttyOptions</class>
- <widget class="QWidget" name="PuttyOptions" >
-  <property name="geometry" >
+ <widget class="QWidget" name="PuttyOptions">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>485</width>
-    <height>342</height>
+    <height>350</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" >
+  <layout class="QVBoxLayout">
    <item>
-    <layout class="QHBoxLayout" >
+    <layout class="QHBoxLayout">
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -29,18 +30,18 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="label" >
-       <property name="text" >
+      <widget class="QLabel" name="label">
+       <property name="text">
         <string>PuTTY - Load saved PuTTY sessions.</string>
        </property>
       </widget>
      </item>
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -51,52 +52,52 @@
     </layout>
    </item>
    <item>
-    <widget class="QTabWidget" name="optionsTabs" >
-     <property name="tabPosition" >
+    <widget class="QTabWidget" name="optionsTabs">
+     <property name="tabPosition">
       <enum>QTabWidget::North</enum>
      </property>
-     <property name="tabShape" >
+     <property name="tabShape">
       <enum>QTabWidget::Rounded</enum>
      </property>
-     <property name="currentIndex" >
+     <property name="currentIndex">
       <number>0</number>
      </property>
-     <property name="elideMode" >
+     <property name="elideMode">
       <enum>Qt::ElideNone</enum>
      </property>
-     <widget class="QWidget" name="optionsTab" >
-      <attribute name="title" >
+     <widget class="QWidget" name="optionsTab">
+      <attribute name="title">
        <string>General Options</string>
       </attribute>
-      <layout class="QVBoxLayout" >
+      <layout class="QVBoxLayout">
        <item>
-        <widget class="QLabel" name="label_2" >
-         <property name="text" >
+        <widget class="QLabel" name="label_2">
+         <property name="text">
           <string>Path to PuTTY executable (Leave blank to try system PATH):</string>
          </property>
-         <property name="buddy" >
+         <property name="buddy">
           <cstring>pathToPuttyText</cstring>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="pathToPuttyText" />
+        <widget class="QLineEdit" name="pathToPuttyText"/>
        </item>
        <item>
-        <layout class="QHBoxLayout" >
+        <layout class="QHBoxLayout">
          <item>
-          <widget class="QPushButton" name="pathToPuttyBrowse" >
-           <property name="text" >
+          <widget class="QPushButton" name="pathToPuttyBrowse">
+           <property name="text">
             <string>Browse...</string>
            </property>
           </widget>
          </item>
          <item>
           <spacer>
-           <property name="orientation" >
+           <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
-           <property name="sizeHint" >
+           <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
              <height>20</height>
@@ -107,46 +108,60 @@
         </layout>
        </item>
        <item>
-        <widget class="QCheckBox" name="catalogSessionsCheck" >
-         <property name="text" >
+        <layout class="QFormLayout" name="formLayout_2">
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="additionalArgsText"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Additional Arguments</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="catalogSessionsCheck">
+         <property name="text">
           <string>Add session names directly to catalog (don't require trigger word first)</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="passArgsCheck" >
-         <property name="text" >
+        <widget class="QCheckBox" name="passArgsCheck">
+         <property name="text">
           <string>Pass unmatched session names as hostname arguments to PuTTY</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="keywordSearchCheck" >
-         <property name="text" >
+        <widget class="QCheckBox" name="keywordSearchCheck">
+         <property name="text">
           <string>Use keyword search method instead of matching literal text</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="useRegexCheck" >
-         <property name="text" >
+        <widget class="QCheckBox" name="useRegexCheck">
+         <property name="text">
           <string>Don't require a TAB to activate plugin</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="startMaximizedCheck" >
-         <property name="text" >
+        <widget class="QCheckBox" name="startMaximizedCheck">
+         <property name="text">
           <string>Start PuTTY maximized</string>
          </property>
         </widget>
        </item>
        <item>
         <spacer>
-         <property name="orientation" >
+         <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
            <height>40</height>
@@ -155,27 +170,27 @@
         </spacer>
        </item>
        <item>
-        <widget class="Line" name="line" >
-         <property name="orientation" >
+        <widget class="Line" name="line">
+         <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" >
+        <layout class="QHBoxLayout">
          <item>
-          <widget class="QPushButton" name="resetAllButton" >
-           <property name="text" >
+          <widget class="QPushButton" name="resetAllButton">
+           <property name="text">
             <string>Reset All to Defaults</string>
            </property>
           </widget>
          </item>
          <item>
           <spacer>
-           <property name="orientation" >
+           <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
-           <property name="sizeHint" >
+           <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
              <height>20</height>
@@ -187,64 +202,64 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="textTab" >
-      <attribute name="title" >
+     <widget class="QWidget" name="textTab">
+      <attribute name="title">
        <string>Trigger Words</string>
       </attribute>
-      <layout class="QVBoxLayout" >
+      <layout class="QVBoxLayout">
        <item>
-        <widget class="QLabel" name="label_4" >
-         <property name="text" >
+        <widget class="QLabel" name="label_4">
+         <property name="text">
           <string>Trigger Words</string>
          </property>
-         <property name="buddy" >
+         <property name="buddy">
           <cstring>textTriggersList</cstring>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QListWidget" name="textTriggersList" >
-         <property name="editTriggers" >
-          <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::NoEditTriggers|QAbstractItemView::SelectedClicked</set>
+        <widget class="QListWidget" name="textTriggersList">
+         <property name="editTriggers">
+          <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
          </property>
-         <property name="alternatingRowColors" >
+         <property name="alternatingRowColors">
           <bool>true</bool>
          </property>
-         <property name="selectionMode" >
+         <property name="selectionMode">
           <enum>QAbstractItemView::SingleSelection</enum>
          </property>
-         <property name="selectionBehavior" >
+         <property name="selectionBehavior">
           <enum>QAbstractItemView::SelectRows</enum>
          </property>
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" >
+        <layout class="QHBoxLayout">
          <item>
-          <widget class="QLineEdit" name="textTriggerText" />
+          <widget class="QLineEdit" name="textTriggerText"/>
          </item>
          <item>
-          <widget class="QPushButton" name="addTextTriggerButton" >
-           <property name="sizePolicy" >
-            <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+          <widget class="QPushButton" name="addTextTriggerButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="text" >
+           <property name="text">
             <string>Add...</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="removeTextTriggerButton" >
-           <property name="sizePolicy" >
-            <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+          <widget class="QPushButton" name="removeTextTriggerButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="text" >
+           <property name="text">
             <string>Delete</string>
            </property>
           </widget>
@@ -253,40 +268,78 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="sessionsTab" >
-      <attribute name="title" >
+     <widget class="QWidget" name="sessionsTab">
+      <attribute name="title">
        <string>Sessions</string>
       </attribute>
-      <layout class="QVBoxLayout" >
+      <layout class="QVBoxLayout">
        <item>
-        <widget class="QGroupBox" name="groupBox" >
-         <property name="title" >
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
           <string>Read sessions from:</string>
          </property>
-         <layout class="QVBoxLayout" >
+         <layout class="QVBoxLayout">
           <item>
-           <widget class="QCheckBox" name="sessionsFromRegCheck" >
-            <property name="text" >
+           <widget class="QCheckBox" name="sessionsFromRegCheck">
+            <property name="text">
              <string>Registry</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="sessionsFromFsCheck" >
-            <property name="text" >
+           <widget class="QCheckBox" name="sessionsFromFsCheck">
+            <property name="text">
              <string>Filesystem (ie PuTTY Tray / portaPuTTY)</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <layout class="QFormLayout" name="f">
+            <property name="fieldGrowthPolicy">
+             <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+            </property>
+            <property name="leftMargin">
+             <number>25</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Load Option</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="sessionsFromFsOptionText">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Directory</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="sessionsFromFsDirText">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
        </item>
        <item>
         <spacer>
-         <property name="orientation" >
+         <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
            <height>40</height>

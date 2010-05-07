@@ -86,3 +86,9 @@ void OptionsDlg::on_resetAllButton_clicked()
 	opt->writeDefaults();
 	syncOptions();
 }
+
+void OptionsDlg::on_sessionsFromFsCheck_stateChanged(int state)
+{
+	sessionsFromFsOptionText->setEnabled(state);
+	sessionsFromFsDirText->setEnabled(state);
+}
