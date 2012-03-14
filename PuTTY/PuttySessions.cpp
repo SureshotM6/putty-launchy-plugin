@@ -2,6 +2,7 @@
 #include "PuTTY.h"
 #include "enumser.h"
 #include <QTextStream>
+#include <QUrl>
 
 const TCHAR PuttySessions::REG_POS[] = L"Software\\SimonTatham\\PuTTY\\Sessions";
 
@@ -82,7 +83,9 @@ void PuttySessions::loadFsSessions()
 	}
 
 	if (dir.cd(PuttyPlugin::opt->sessionsFromFsDir)) {
-		*this += dir.entryList(QDir::Files);
+		foreach (const QString &str, dir.entryList(QDir::Files)) {
+			*this += QUrl::fromPercentEncoding(str.toLocal8Bit());
+		}
 	}
 }
 
