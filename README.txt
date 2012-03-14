@@ -23,6 +23,11 @@ filesystem in the plugin options dialog.
 
 
 CHANGELOG
+v2.4
+    Added URL decoding for sessions saved as files
+    Added serial ports to session list (with option)
+    Upgraded build system to VS2008
+
 v2.3
     Rebuilt for use with Launchy 2.5+
     Added additional options for loading sessions from files
