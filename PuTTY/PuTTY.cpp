@@ -6,7 +6,7 @@
 Options *PuttyPlugin::opt = NULL;
 
 const QString PuttyPlugin::PLUGIN_NAME = "PuTTY";
-const QString PuttyPlugin::PLUGIN_VERSION = "2.3";
+const QString PuttyPlugin::PLUGIN_VERSION = "2.4";
 const uint PuttyPlugin::HASH_PUTTY = qHash(PuttyPlugin::PLUGIN_NAME);
 
 PuttyPlugin::PuttyPlugin()
@@ -160,7 +160,12 @@ void PuttyPlugin::getResults(QList<InputData>* id, QList<CatItem>* results)
 		if (opt->sessionsFromFs) {
 			matchCount += addSessionsToList(results, PuttySessions::FILESYSTEM, text);
 		}
+		
+		if (opt->comPorts) {
+			matchCount += addSessionsToList(results, PuttySessions::COMPORT, text);
+		}
 
+		//we can only pass this with a 0 match count since launchy will reorder the list to put it first
 		if (opt->passArgs && matchCount == 0) {
 			results->push_front(CatItem(text + "." + PuttySessions::TypeToString(PuttySessions::CMDLINE), text, HASH_PUTTY, getIcon()));
 		}
@@ -192,6 +197,10 @@ void PuttyPlugin::getCatalog(QList<CatItem>* items)
 		if (opt->sessionsFromFs) {
 			addSessionsToList(items, PuttySessions::FILESYSTEM, "");
 		}
+
+		if (opt->comPorts) {
+			addSessionsToList(items, PuttySessions::COMPORT, "");
+		}
 	}
 }
 
@@ -216,6 +225,11 @@ void PuttyPlugin::launchItem(QList<InputData>* id, CatItem* item)
 		break;
 	case PuttySessions::CMDLINE:
 		args = sessionName;
+		break;
+	case PuttySessions::COMPORT:
+		PuttySessions::EscapeQuotes(sessionName);
+		//strip off description
+		args = "-serial \"" + sessionName.section(' ', 0, 0) + "\"";
 		break;
 	default:
 		/* just start putty by itself */

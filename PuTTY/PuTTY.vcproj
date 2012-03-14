@@ -109,6 +109,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\enumser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Options.cpp"
 				>
 			</File>
@@ -132,6 +136,10 @@
 			>
 			<File
 				RelativePath=".\catalog.h"
+				>
+			</File>
+			<File
+				RelativePath=".\enumser.h"
 				>
 			</File>
 			<File

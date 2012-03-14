@@ -7,6 +7,7 @@ XBOOL(useRegex, true)
 XBOOL(startMaximized, false)
 XBOOL(sessionsFromReg, true)
 XBOOL(sessionsFromFs, false)
+XBOOL(comPorts, true)
 XSTRING(sessionsFromFsOption, "-loadfile")
 XSTRING(sessionsFromFsDir, "sessions")
 XSTRINGLIST(textTriggers,

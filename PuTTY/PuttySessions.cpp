@@ -1,11 +1,14 @@
 #include "PuttySessions.h"
 #include "PuTTY.h"
+#include "enumser.h"
+#include <QTextStream>
 
 const TCHAR PuttySessions::REG_POS[] = L"Software\\SimonTatham\\PuTTY\\Sessions";
 
 const QString PuttySessions::PUTTY_CMDLINE = PuttyPlugin::PLUGIN_NAME + ".cmdline";
 const QString PuttySessions::PUTTY_REGISTRY = PuttyPlugin::PLUGIN_NAME + ".registry";
 const QString PuttySessions::PUTTY_FILESYSTEM = PuttyPlugin::PLUGIN_NAME + ".filesystem";
+const QString PuttySessions::PUTTY_COMPORT = PuttyPlugin::PLUGIN_NAME + ".comport";
 
 PuttySessions::PuttySessions(SessionType type)
 	: QStringList()
@@ -16,6 +19,9 @@ PuttySessions::PuttySessions(SessionType type)
 		break;
 	case FILESYSTEM:
 		loadFsSessions();
+		break;
+	case COMPORT:
+		loadComPorts();
 		break;
 	default:
 		break;
@@ -80,6 +86,23 @@ void PuttySessions::loadFsSessions()
 	}
 }
 
+void PuttySessions::loadComPorts()
+{
+	CSimpleArray<UINT> ports;
+	CSimpleArray<CString> friendlyNames;
+	int i;
+
+	if (!CEnumerateSerial::UsingSetupAPI1(ports, friendlyNames)) {
+		return;
+	}
+
+	for (i=0; i<ports.GetSize(); i++) {
+		QString name;
+		QTextStream(&name) << "COM" << ports[i] << " (" << QString::fromWCharArray((LPCTSTR)friendlyNames[i], friendlyNames[i].GetLength()) << ")";
+		*this += name;
+	}
+}
+
 void PuttySessions::EscapeQuotes(QString &s)
 {
 	s.replace("\"", "\\\"");
@@ -108,6 +131,8 @@ QString PuttySessions::TypeToString(SessionType type)
 		return PUTTY_REGISTRY;
 	case FILESYSTEM:
 		return PUTTY_FILESYSTEM;
+	case COMPORT:
+		return PUTTY_COMPORT;
 	default:
 		return PUTTY_CMDLINE;
 	}
@@ -120,6 +145,9 @@ PuttySessions::SessionType PuttySessions::StringToType(QString string)
 	}else
 	if (string.endsWith("." + PUTTY_FILESYSTEM)) {
 		return FILESYSTEM;
+	}else
+	if (string.endsWith("." + PUTTY_COMPORT)) {
+		return COMPORT;
 	}else
 	if (string.endsWith("." + PUTTY_CMDLINE)) {
 		return CMDLINE;

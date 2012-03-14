@@ -2,8 +2,8 @@ TEMPLATE         = lib
 CONFIG          += plugin release
 UI_DIR           = .
 FORMS            = putty_options.ui
-HEADERS          = plugin_interface.h PuTTY.h OptionsDlg.h Options.h PuttySessions.h
-SOURCES          = plugin_interface.cpp PuTTY.cpp OptionsDlg.cpp Options.cpp PuttySessions.cpp
+HEADERS          = plugin_interface.h PuTTY.h OptionsDlg.h Options.h PuttySessions.h enumser.h
+SOURCES          = plugin_interface.cpp PuTTY.cpp OptionsDlg.cpp Options.cpp PuttySessions.cpp enumser.cpp
 TARGET           = putty
 
 win32 {

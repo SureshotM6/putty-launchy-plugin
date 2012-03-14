@@ -10,17 +10,20 @@ private:
 	static QString unmungeString(const TCHAR in[]);
 	void loadRegSessions();
 	void loadFsSessions();
+	void loadComPorts();
 
 	static const QString PUTTY_CMDLINE;
 	static const QString PUTTY_REGISTRY;
 	static const QString PUTTY_FILESYSTEM;
+	static const QString PUTTY_COMPORT;
 
 public:
 	static const enum SessionType {
 		UNKNOWN,
 		REGISTRY,
 		FILESYSTEM,
-		CMDLINE
+		CMDLINE,
+		COMPORT,
 	};
 
 	static QString TypeToString(SessionType type);
